@@ -1,0 +1,26 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 500px;
+}
+
+.row {
+  display: flex;
+}
+
+.unit {
+  width: 20px;
+  height: 20px;
+  background: #cccccc;
+}
+
+.cube {
+  background: blue;
+}
