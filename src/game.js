@@ -1,16 +1,19 @@
 import React from "react";
 
 import Board from "./board";
+import { randomItems } from "./utils";
 
 const NUM_ROW = 20;
 const NUM_COLUMN = 10;
 
 const EMPTY = 0;
 const CUBE = 1;
-
-const Stick = [[-1, 0], [0, 0], [1, 0], [2, 0]];
-const TShape = [[0, 0], [-1, 0], [0, 1], [1, 0]];
-const LShape = [[0, 0], [0, 1], [1, 0], [2, 0]];
+const STICK = 2;
+const TSHAPE = 3;
+const LSHAPE = 4;
+const LSHAPE_R = 5;
+const LIGHTING = 6;
+const LIGHTING_R = 7;
 
 export const Tetris = {
   [EMPTY]: {
@@ -19,6 +22,30 @@ export const Tetris = {
   [CUBE]: {
     shape: [[0, 0], [0, 1], [1, 1], [1, 0]],
     name: "cube"
+  },
+  [STICK]: {
+    shape: [[0, 0], [0, -1], [0, 1], [0, 2]],
+    name: "stick"
+  },
+  [TSHAPE]: {
+    shape: [[0, 0], [0, -1], [0, 1], [1, 0]],
+    name: "tshape"
+  },
+  [LSHAPE]: {
+    shape: [[0, -1], [1, -1], [1, 0], [1, 1]],
+    name: "lshape"
+  },
+  [LSHAPE_R]: {
+    shape: [[1, -1], [1, 0], [1, 1], [0, 1]],
+    name: "lshape-r"
+  },
+  [LIGHTING]: {
+    shape: [[0, -1], [0, 0], [1, 0], [1, 1]],
+    name: "lighting"
+  },
+  [LIGHTING_R]: {
+    shape: [[0, 1], [0, 0], [1, 0], [1, -1]],
+    name: "lighting-r"
   }
 };
 
@@ -84,10 +111,10 @@ export default class Game extends React.PureComponent {
 
   placeNewTetris = () => {
     // select one cube
-
+    const tetris = randomItems(Object.keys(Tetris).slice(1));
     const shift = Math.floor((NUM_COLUMN - 1) / 2);
-    const positions = Tetris[CUBE].shape.map(([i, j]) => [i, j + shift]);
-    this.updateTetris(positions, CUBE, [0, 0]);
+    const positions = Tetris[tetris].shape.map(([i, j]) => [i, j + shift]);
+    this.updateTetris(positions, tetris, [0, 0]);
   };
 
   updateTetris = (positions, tetris, direction, cb = () => {}) => {
@@ -99,7 +126,7 @@ export default class Game extends React.PureComponent {
     });
 
     positions.forEach(([i, j]) => {
-      newGrid[i + x][j + y] = CUBE;
+      newGrid[i + x][j + y] = tetris;
       nextTetrisPos.push([i + x, j + y]);
     });
 

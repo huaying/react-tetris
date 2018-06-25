@@ -24,3 +24,27 @@
 .cube {
   background: blue;
 }
+
+.stick {
+  background: red;
+}
+
+.tshape {
+  background: orange;
+}
+
+.lshape {
+  background: green;
+}
+
+.lshape-r {
+  background: purple;
+}
+
+.lighting {
+  background: darkblue;
+}
+
+.lighting-r {
+  background: lightsalmon;
+}
