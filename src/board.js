@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { PIECE } from "./game";
+import { PIECE } from "./constants";
 
 export default class Board extends React.PureComponent {
   static propTypes = {
