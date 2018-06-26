@@ -15,44 +15,86 @@ const LSHAPE_R = 5;
 const LIGHTING = 6;
 const LIGHTING_R = 7;
 
-export const Tetris = {
-  [EMPTY]: {
-    name: ""
-  },
-  [CUBE]: {
-    shape: [[0, 0], [0, 1], [1, 1], [1, 0]],
-    name: "cube"
-  },
-  [STICK]: {
-    shape: [[0, 0], [0, -1], [0, 1], [0, 2]],
-    name: "stick"
-  },
-  [TSHAPE]: {
-    shape: [[0, 0], [0, -1], [0, 1], [1, 0]],
-    name: "tshape"
-  },
-  [LSHAPE]: {
-    shape: [[0, -1], [1, -1], [1, 0], [1, 1]],
-    name: "lshape"
-  },
-  [LSHAPE_R]: {
-    shape: [[1, -1], [1, 0], [1, 1], [0, 1]],
-    name: "lshape-r"
-  },
-  [LIGHTING]: {
-    shape: [[0, -1], [0, 0], [1, 0], [1, 1]],
-    name: "lighting"
-  },
-  [LIGHTING_R]: {
-    shape: [[0, 1], [0, 0], [1, 0], [1, -1]],
-    name: "lighting-r"
-  }
-};
-
 const DIR = {
   DOWN: [1, 0],
   LEFT: [0, -1],
   RIGHT: [0, 1]
+};
+
+const DEG = {
+  ZERO: 0,
+  NIGHTY: 1,
+  REVERSE: 2,
+  REVERSE_NIGHTY: 3
+};
+export const PIECE = {
+  [EMPTY]: {
+    name: "empty"
+  },
+  [CUBE]: {
+    shape: {
+      [DEG.ZERO]: [[0, 0], [0, 1], [1, 1], [1, 0]],
+      [DEG.NIGHTY]: [[0, 0], [0, 1], [1, 1], [1, 0]],
+      [DEG.REVERSE]: [[0, 0], [0, 1], [1, 1], [1, 0]],
+      [DEG.REVERSE_NIGHTY]: [[0, 0], [0, 1], [1, 1], [1, 0]]
+    },
+    name: "cube"
+  },
+  [STICK]: {
+    shape: {
+      [DEG.ZERO]: [[0, -1], [0, 0], [0, 1], [0, 2]],
+      [DEG.NIGHTY]: [[-2, 0], [-1, 0], [0, 0], [1, 0]],
+      [DEG.REVERSE]: [[-1, -1], [-1, 0], [-1, 1], [-1, 2]],
+      [DEG.REVERSE_NIGHTY]: [[-2, 1], [-1, 1], [0, 1], [1, 1]]
+    },
+    name: "stick"
+  },
+  [TSHAPE]: {
+    shape: {
+      [DEG.ZERO]: [[1, 0], [1, -1], [1, 1], [0, 0]],
+      [DEG.NIGHTY]: [[1, 0], [2, 0], [1, 1], [0, 0]],
+      [DEG.REVERSE]: [[1, 0], [1, -1], [1, 1], [2, 0]],
+      [DEG.REVERSE_NIGHTY]: [[1, 0], [2, 0], [1, -1], [0, 0]]
+    },
+    name: "tshape"
+  },
+  [LSHAPE]: {
+    shape: {
+      [DEG.ZERO]: [[0, -1], [1, -1], [1, 0], [1, 1]],
+      [DEG.NIGHTY]: [[0, 0], [1, 0], [2, 0], [0, 1]],
+      [DEG.REVERSE]: [[1, 0], [1, -1], [1, 1], [2, 1]],
+      [DEG.REVERSE_NIGHTY]: [[0, 0], [1, 0], [2, 0], [2, -1]]
+    },
+    name: "lshape"
+  },
+  [LSHAPE_R]: {
+    shape: {
+      [DEG.ZERO]: [[1, -1], [1, 0], [1, 1], [0, 1]],
+      [DEG.NIGHTY]: [[0, 0], [1, 0], [2, 0], [2, 1]],
+      [DEG.REVERSE]: [[1, 0], [1, -1], [1, 1], [2, -1]],
+      [DEG.REVERSE_NIGHTY]: [[0, 0], [1, 0], [2, 0], [0, -1]]
+    },
+    name: "lshape-r"
+  },
+  [LIGHTING]: {
+    shape: {
+      [DEG.ZERO]: [[0, -1], [0, 0], [1, 0], [1, 1]],
+      [DEG.NIGHTY]: [[0, 0], [0, 1], [1, 0], [-1, 1]],
+      [DEG.REVERSE]: [[0, -1], [0, 0], [1, 0], [1, 1]],
+      [DEG.REVERSE_NIGHTY]: [[0, 0], [0, 1], [1, 0], [-1, 1]]
+    },
+    name: "lighting"
+  },
+  [LIGHTING_R]: {
+    shape: {
+      [DEG.ZERO]: [[0, 1], [0, 0], [1, 0], [1, -1]],
+      [DEG.NIGHTY]: [[0, 0], [0, -1], [1, 0], [-1, -1]],
+      [DEG.REVERSE]: [[0, 1], [0, 0], [1, 0], [1, -1]],
+      [DEG.REVERSE_NIGHTY]: [[0, 0], [0, -1], [1, 0], [-1, -1]]
+    },
+    center: [0, 0],
+    name: "lighting-r"
+  }
 };
 
 export default class Game extends React.PureComponent {
@@ -67,82 +109,177 @@ export default class Game extends React.PureComponent {
       .fill(null)
       .map(e => Array(NUM_COLUMN).fill(EMPTY)),
 
-    currentTetris: null,
-    currentTetrisPos: null
+    piece: null,
+    piecePos: null,
+    pieceDeg: null
   };
 
   gameStart = () => {
     this.timer = setInterval(this.gameLoop, 300);
     window.addEventListener("keydown", this.controller);
-    this.placeNewTetris();
+    this.placeNewPiece();
   };
 
   gameEnd = () => {};
 
   controller = e => {
+    const { piece, piecePos, pieceDeg } = this.state;
     const DIRMap = {
       37: DIR.LEFT,
       39: DIR.RIGHT,
       40: DIR.DOWN
     };
 
+    // Key Left, Right: move
     const direction = DIRMap[e.keyCode];
     if (direction)
-      if (!this.tetrisEnded(this.state.currentTetrisPos, direction)) {
-        this.updateTetris(
-          this.state.currentTetrisPos,
-          this.state.currentTetris,
-          direction
-        );
+      if (!this.pieceEnded(piece, piecePos, pieceDeg, direction)) {
+        this.updatePiece(piece, piecePos, pieceDeg, direction);
       }
-  };
 
-  gameLoop = () => {
-    if (this.tetrisEnded(this.state.currentTetrisPos, DIR.DOWN)) {
-      this.placeNewTetris();
-    } else {
-      this.updateTetris(
-        this.state.currentTetrisPos,
-        this.state.currentTetris,
-        DIR.DOWN
-      );
+    // Key Up: rorate
+    if (e.keyCode === 38) {
+      this.rotatePiece(piece, piecePos, pieceDeg);
+    }
+
+    // Key Space: drop
+    if (e.keyCode === 32) {
+      this.dropPiece(piece, piecePos, pieceDeg);
+      this.gameLoop();
+      window.clearInterval(this.timer);
+      this.timer = setInterval(this.gameLoop, 300);
     }
   };
 
-  placeNewTetris = () => {
-    // select one cube
-    const tetris = randomItems(Object.keys(Tetris).slice(1));
-    const shift = Math.floor((NUM_COLUMN - 1) / 2);
-    const positions = Tetris[tetris].shape.map(([i, j]) => [i, j + shift]);
-    this.updateTetris(positions, tetris, [0, 0]);
+  gameLoop = () => {
+    const { piece, piecePos, pieceDeg } = this.state;
+    if (this.pieceEnded(piece, piecePos, pieceDeg, DIR.DOWN)) {
+      this.lineCleanCheck();
+      this.placeNewPiece();
+    } else {
+      this.updatePiece(piece, piecePos, pieceDeg, DIR.DOWN);
+    }
   };
 
-  updateTetris = (positions, tetris, direction, cb = () => {}) => {
-    const [x, y] = direction;
-    const newGrid = [...this.state.grid];
-    const nextTetrisPos = [];
-    positions.forEach(([i, j]) => {
-      newGrid[i][j] = EMPTY;
+  lineCleanCheck = () => {
+    const { grid } = this.state;
+    const lines = grid.filter(
+      line =>
+        line.some(unit => unit !== EMPTY) && !line.every(unit => unit !== EMPTY)
+    );
+    const newGrid = Array(NUM_ROW)
+      .fill(null)
+      .map(e => Array(NUM_COLUMN).fill(EMPTY));
+
+    let newGridLineIdx = NUM_ROW - 1;
+    lines.reverse().forEach(line => {
+      newGrid[newGridLineIdx--] = [...line];
     });
 
-    positions.forEach(([i, j]) => {
-      newGrid[i + x][j + y] = tetris;
-      nextTetrisPos.push([i + x, j + y]);
-    });
+    this.setState(prevState => ({
+      grid: newGrid
+    }));
+  };
+
+  placeNewPiece = () => {
+    const piece = randomItems(Object.keys(PIECE).slice(1));
+    const shift = Math.floor((NUM_COLUMN - 1) / 2);
+    this.updatePiece(piece, [0, shift], DEG.ZERO, [0, 0]);
+  };
+
+  getPiecePositions = (piece, position, degree) => {
+    return PIECE[piece].shape[degree].map(([i, j]) => [
+      i + position[0],
+      j + position[1]
+    ]);
+  };
+
+  getTunedPositions = (piece, position, degree) => {
+    let positions = null;
+    let prev_pos = [];
+    while (true) {
+      if (prev_pos.toString() === position.toString()) break;
+      prev_pos = [...position];
+      positions = this.getPiecePositions(piece, position, degree);
+      for (let idx = 0; idx < positions.length; idx++) {
+        const [i, j] = positions[idx];
+        if (i < 0) position = [position[0] + 1, position[1]];
+        if (i >= NUM_ROW) position = [position[0] - 1, position[1]];
+        if (j < 0) position = [position[0], position[1] + 1];
+        if (j >= NUM_COLUMN) position = [position[0], position[1] - 1];
+      }
+    }
+    return [position, positions];
+  };
+
+  updatePiece = (piece, position, degree, direction, cb = () => {}) => {
+    const [x, y] = direction;
+    const newGrid = [...this.state.grid];
+    const positions = this.getPiecePositions(piece, position, degree);
+    positions.forEach(([i, j]) => (newGrid[i][j] = EMPTY));
+    positions.forEach(([i, j]) => (newGrid[i + x][j + y] = piece));
 
     this.setState(
       {
         grid: newGrid,
-        currentTetris: tetris,
-        currentTetrisPos: nextTetrisPos
+        piece,
+        pieceDeg: degree,
+        piecePos: [position[0] + x, position[1] + y]
       },
       () => cb()
     );
   };
 
-  tetrisEnded = (positions, direction) => {
+  rotatePiece = (piece, position, degree, cb = () => {}) => {
+    const newGrid = [...this.state.grid];
+    const nextDeg = (degree + 1) % Object.keys(DEG).length;
+    const positions = this.getPiecePositions(piece, position, degree);
+    const [newPosition, newPositions] = this.getTunedPositions(
+      piece,
+      position,
+      nextDeg
+    );
+
+    positions.forEach(([i, j]) => (newGrid[i][j] = EMPTY));
+    newPositions.forEach(([i, j]) => (newGrid[i][j] = piece));
+
+    this.setState(
+      {
+        piecePos: newPosition,
+        pieceDeg: nextDeg,
+        grid: newGrid
+      },
+      () => cb()
+    );
+  };
+
+  dropPiece = (piece, position, degree) => {
+    const positions = this.getPiecePositions(piece, position, degree);
+    const { grid } = this.state;
+    let dist = 0;
+    let next = 0;
+
+    const shouldEnded = ([i, j]) => {
+      return (
+        i + next >= NUM_ROW ||
+        (!positions.map(p => p.toString()).includes([i + next, j].toString()) &&
+          grid[i + next][j] !== EMPTY)
+      );
+    };
+
+    while (true) {
+      next = dist + 1;
+      const end = positions.some(shouldEnded);
+      if (!end) dist += 1;
+      else break;
+    }
+    this.updatePiece(piece, position, degree, [dist, 0]);
+  };
+
+  pieceEnded = (piece, position, degree, direction) => {
     const [x, y] = direction;
     const { grid } = this.state;
+    const positions = this.getPiecePositions(piece, position, degree);
     return positions.some(
       ([i, j]) =>
         i + x < 0 ||

@@ -1,48 +1,66 @@
 .App {
   font-family: sans-serif;
   text-align: center;
-}
-
-.board {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 500px;
+}
+
+.board {
+  width: auto;
+  box-shadow: 0px 0px 5px 1px rgba(0, 0, 0, 0.5);
+  margin: 20px;
 }
 
 .row {
   display: flex;
 }
 
+.empty {
+  background: #efefef;
+}
+
 .unit {
-  width: 20px;
-  height: 20px;
-  background: #cccccc;
+  width: 25px;
+  height: 25px;
+  border: 1px solid #dedede;
+}
+
+.unit:not(.empty) {
+  box-shadow: inset 0px 0px 5px 1px rgba(0, 0, 0, 0.5);
+}
+
+.unit + .unit {
+  border-left: none;
+}
+
+.row + .row .unit {
+  border-top: none;
 }
 
 .cube {
-  background: blue;
+  background: #7e7eff;
 }
 
 .stick {
-  background: red;
+  background: #ff4444;
 }
 
 .tshape {
-  background: orange;
+  background: #ffd17e;
 }
 
 .lshape {
-  background: green;
+  background: #49cc49;
 }
 
 .lshape-r {
-  background: purple;
+  background: #ab3cab;
 }
 
 .lighting {
-  background: darkblue;
+  background: #a2a2a2;
 }
 
 .lighting-r {

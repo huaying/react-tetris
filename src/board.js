@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { Tetris } from "./game";
+import { PIECE } from "./game";
 
 export default class Board extends React.PureComponent {
   static propTypes = {
@@ -9,7 +9,7 @@ export default class Board extends React.PureComponent {
 
   renderRow = rowIdx => {
     return this.props.grid[rowIdx].map(unit => {
-      const cls = `unit ${Tetris[unit].name}`;
+      const cls = `unit ${PIECE[unit].name}`;
       return <div className={cls} />;
     });
   };
