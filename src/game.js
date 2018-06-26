@@ -203,12 +203,15 @@ export default class Game extends React.PureComponent {
 
   render() {
     return (
-      <React.Fragment>
+      <div className="game">
         <Board grid={this.state.grid} />
-        <div className="start" onClick={this.gameStart}>
-          Start
+        <div className="info">
+          <span className="title"> Tetris </span>
+          <span className="start" onClick={this.gameStart}>
+            Start
+          </span>
         </div>
-      </React.Fragment>
+      </div>
     );
   }
 }
