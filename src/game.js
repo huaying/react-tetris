@@ -3,35 +3,55 @@ import React from "react";
 import Board from "./board";
 import { randomItems } from "./utils";
 
-import { NUM_ROW, NUM_COLUMN, EMPTY, DIR, DEG, PIECE } from "./constants";
+import {
+  NUM_ROW,
+  NUM_COLUMN,
+  EMPTY,
+  DIR,
+  DEG,
+  PIECE,
+  LOOP_TIME,
+  GAME_STATUS
+} from "./constants";
 
 export default class Game extends React.PureComponent {
   constructor(props) {
     super(props);
     this.timer = null;
+    this.state = this.initState();
+    window.addEventListener("keydown", this.controller);
   }
 
-  state = {
-    playing: true,
-    grid: Array(NUM_ROW)
-      .fill(null)
-      .map(e => Array(NUM_COLUMN).fill(EMPTY)),
+  initState() {
+    return {
+      status: GAME_STATUS.INIT,
+      grid: Array(NUM_ROW)
+        .fill(null)
+        .map(e => Array(NUM_COLUMN).fill(EMPTY)),
 
-    piece: null,
-    piecePos: null,
-    pieceDeg: null
-  };
+      piece: null,
+      piecePos: null,
+      pieceDeg: null
+    };
+  }
 
   gameStart = () => {
-    this.timer = setInterval(this.gameLoop, 300);
-    window.addEventListener("keydown", this.controller);
-    this.placeNewPiece();
+    this.setState({ ...this.initState(), status: GAME_STATUS.PLAYING }, () => {
+      window.clearInterval(this.timer);
+      this.timer = setInterval(this.gameLoop, LOOP_TIME);
+      this.placeNewPiece();
+    });
   };
 
-  gameEnd = () => {};
+  gameEnd = () => {
+    this.setState({ status: GAME_STATUS.GAMEOVER });
+    window.clearInterval(this.timer);
+  };
 
   controller = e => {
-    const { piece, piecePos, pieceDeg } = this.state;
+    const { status, piece, piecePos, pieceDeg } = this.state;
+    if (status !== GAME_STATUS.PLAYING) return;
+
     const DIRMap = {
       37: DIR.LEFT,
       39: DIR.RIGHT,
@@ -55,7 +75,7 @@ export default class Game extends React.PureComponent {
       this.dropPiece(piece, piecePos, pieceDeg);
       this.gameLoop();
       window.clearInterval(this.timer);
-      this.timer = setInterval(this.gameLoop, 300);
+      this.timer = setInterval(this.gameLoop, LOOP_TIME);
     }
   };
 
@@ -92,7 +112,22 @@ export default class Game extends React.PureComponent {
   placeNewPiece = () => {
     const piece = randomItems(Object.keys(PIECE).slice(1));
     const shift = Math.floor((NUM_COLUMN - 1) / 2);
-    this.updatePiece(piece, [0, shift], DEG.ZERO, [0, 0]);
+    const { grid } = this.state;
+
+    const positions = this.getPiecePositions(piece, [0, shift], DEG.ZERO);
+    if (positions.every(([i, j]) => grid[i][j] === EMPTY)) {
+      this.updatePiece(piece, [0, shift], DEG.ZERO, [0, 0]);
+    } else {
+      const newGrid = [...grid];
+      const backupPosistions = positions.map(([i, j]) => [i - 1, j]);
+      if (!backupPosistions.some(([i, j]) => i >= 0 && grid[i][j] !== EMPTY)) {
+        backupPosistions.forEach(([i, j]) => {
+          if (i >= 0) newGrid[i][j] = piece;
+        });
+      }
+      this.setState({ grid: newGrid });
+      this.gameEnd();
+    }
   };
 
   getPiecePositions = (piece, position, degree) => {
@@ -204,7 +239,7 @@ export default class Game extends React.PureComponent {
   render() {
     return (
       <div className="game">
-        <Board grid={this.state.grid} />
+        <Board grid={this.state.grid} gameStatus={this.state.status} />
         <div className="info">
           <span className="title"> Tetris </span>
           <span className="start" onClick={this.gameStart}>

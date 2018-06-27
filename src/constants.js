@@ -1,6 +1,8 @@
 export const NUM_ROW = 20;
 export const NUM_COLUMN = 10;
 
+export const LOOP_TIME = 300;
+
 export const EMPTY = 0;
 export const CUBE = 1;
 export const STICK = 2;
@@ -9,6 +11,12 @@ export const LSHAPE = 4;
 export const LSHAPE_R = 5;
 export const LIGHTING = 6;
 export const LIGHTING_R = 7;
+
+export const GAME_STATUS = {
+  INIT: 0,
+  PLAYING: 1,
+  GAMEOVER: 2
+};
 
 export const DIR = {
   DOWN: [1, 0],

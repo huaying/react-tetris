@@ -1,6 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
-import { PIECE } from "./constants";
+import { PIECE, GAME_STATUS } from "./constants";
 
 export default class Board extends React.PureComponent {
   static propTypes = {
@@ -14,9 +14,15 @@ export default class Board extends React.PureComponent {
     });
   };
 
+  renderPanel = () => {
+    if (this.props.gameStatus !== GAME_STATUS.GAMEOVER) return null;
+    return <div className="panel">Game Over</div>;
+  };
+
   render() {
     return (
       <div className="board">
+        {this.renderPanel()}
         {this.props.grid.map((row, rowIdx) => (
           <div className="row">{this.renderRow(rowIdx)}</div>
         ))}
