@@ -7,6 +7,7 @@ import {
   NUM_ROW,
   NUM_COLUMN,
   EMPTY,
+  SHADOW,
   DIR,
   DEG,
   PIECE,
@@ -62,12 +63,24 @@ export default class Game extends React.PureComponent {
     const direction = DIRMap[e.keyCode];
     if (direction)
       if (!this.pieceEnded(piece, piecePos, pieceDeg, direction)) {
-        this.updatePiece(piece, piecePos, pieceDeg, direction);
+        this.updatePiece(piece, piecePos, pieceDeg, direction, () => {
+          this.updateShadow(
+            this.state.piece,
+            this.state.piecePos,
+            this.state.pieceDeg
+          );
+        });
       }
 
     // Key Up: rorate
     if (e.keyCode === 38) {
-      this.rotatePiece(piece, piecePos, pieceDeg);
+      this.rotatePiece(piece, piecePos, pieceDeg, () => {
+        this.updateShadow(
+          this.state.piece,
+          this.state.piecePos,
+          this.state.pieceDeg
+        );
+      });
     }
 
     // Key Space: drop
@@ -93,7 +106,8 @@ export default class Game extends React.PureComponent {
     const { grid } = this.state;
     const lines = grid.filter(
       line =>
-        line.some(unit => unit !== EMPTY) && !line.every(unit => unit !== EMPTY)
+        line.some(unit => !this.unitEmpty(unit)) &&
+        !line.every(unit => !this.unitEmpty(unit))
     );
     const newGrid = Array(NUM_ROW)
       .fill(null)
@@ -109,14 +123,23 @@ export default class Game extends React.PureComponent {
     }));
   };
 
+  unitEmpty = v => v === EMPTY || v === SHADOW;
+
   placeNewPiece = () => {
-    const piece = randomItems(Object.keys(PIECE).slice(1));
+    const piece = randomItems(Object.keys(PIECE));
+    console.log(piece);
     const shift = Math.floor((NUM_COLUMN - 1) / 2);
     const { grid } = this.state;
 
     const positions = this.getPiecePositions(piece, [0, shift], DEG.ZERO);
-    if (positions.every(([i, j]) => grid[i][j] === EMPTY)) {
-      this.updatePiece(piece, [0, shift], DEG.ZERO, [0, 0]);
+    if (positions.every(([i, j]) => this.unitEmpty(grid[i][j]))) {
+      this.updatePiece(piece, [0, shift], DEG.ZERO, [0, 0], () => {
+        this.updateShadow(
+          this.state.piece,
+          this.state.piecePos,
+          this.state.pieceDeg
+        );
+      });
     } else {
       const newGrid = [...grid];
       const backupPosistions = positions.map(([i, j]) => [i - 1, j]);
@@ -155,10 +178,33 @@ export default class Game extends React.PureComponent {
     return [position, positions];
   };
 
+  updateShadow = (piece, position, degree) => {
+    const newGrid = [...this.state.grid];
+    const positions = this.getPiecePositions(piece, position, degree);
+
+    newGrid.forEach((row, i) =>
+      row.forEach((unit, j) => {
+        if (unit === SHADOW) newGrid[i][j] = EMPTY;
+      })
+    );
+
+    const dist = this.getDropDist(piece, position, degree);
+    positions.forEach(([i, j]) => {
+      if (
+        !positions.map(p => p.toString()).includes([i + dist, j].toString())
+      ) {
+        newGrid[i + dist][j] = SHADOW;
+      }
+    });
+
+    this.setState({ grid: newGrid });
+  };
+
   updatePiece = (piece, position, degree, direction, cb = () => {}) => {
     const [x, y] = direction;
     const newGrid = [...this.state.grid];
     const positions = this.getPiecePositions(piece, position, degree);
+
     positions.forEach(([i, j]) => (newGrid[i][j] = EMPTY));
     positions.forEach(([i, j]) => (newGrid[i + x][j + y] = piece));
 
@@ -183,20 +229,30 @@ export default class Game extends React.PureComponent {
       nextDeg
     );
 
-    positions.forEach(([i, j]) => (newGrid[i][j] = EMPTY));
-    newPositions.forEach(([i, j]) => (newGrid[i][j] = piece));
+    if (
+      !newPositions.some(
+        ([i, j]) =>
+          !positions.map(p => p.toString()).includes([i, j].toString()) &&
+          !this.unitEmpty(newGrid[i][j])
+      )
+    ) {
+      positions.forEach(([i, j]) => (newGrid[i][j] = EMPTY));
+      newPositions.forEach(([i, j]) => (newGrid[i][j] = piece));
 
-    this.setState(
-      {
-        piecePos: newPosition,
-        pieceDeg: nextDeg,
-        grid: newGrid
-      },
-      () => cb()
-    );
+      this.setState(
+        {
+          piecePos: newPosition,
+          pieceDeg: nextDeg,
+          grid: newGrid
+        },
+        () => cb()
+      );
+    } else {
+      cb();
+    }
   };
 
-  dropPiece = (piece, position, degree) => {
+  getDropDist = (piece, position, degree) => {
     const positions = this.getPiecePositions(piece, position, degree);
     const { grid } = this.state;
     let dist = 0;
@@ -206,7 +262,7 @@ export default class Game extends React.PureComponent {
       return (
         i + next >= NUM_ROW ||
         (!positions.map(p => p.toString()).includes([i + next, j].toString()) &&
-          grid[i + next][j] !== EMPTY)
+          !this.unitEmpty(grid[i + next][j]))
       );
     };
 
@@ -216,6 +272,11 @@ export default class Game extends React.PureComponent {
       if (!end) dist += 1;
       else break;
     }
+    return dist;
+  };
+
+  dropPiece = (piece, position, degree) => {
+    const dist = this.getDropDist(piece, position, degree);
     this.updatePiece(piece, position, degree, [dist, 0]);
   };
 
@@ -232,7 +293,7 @@ export default class Game extends React.PureComponent {
         (!positions
           .map(p => p.toString())
           .includes([i + x, j + y].toString()) &&
-          grid[i + x][j + y] !== EMPTY)
+          !this.unitEmpty(grid[i + x][j + y]))
     );
   };
 

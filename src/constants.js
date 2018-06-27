@@ -11,6 +11,7 @@ export const LSHAPE = 4;
 export const LSHAPE_R = 5;
 export const LIGHTING = 6;
 export const LIGHTING_R = 7;
+export const SHADOW = 8;
 
 export const GAME_STATUS = {
   INIT: 0,
@@ -32,9 +33,6 @@ export const DEG = {
 };
 
 export const PIECE = {
-  [EMPTY]: {
-    name: "empty"
-  },
   [CUBE]: {
     shape: {
       [DEG.ZERO]: [[0, 0], [0, 1], [1, 1], [1, 0]],
@@ -96,7 +94,16 @@ export const PIECE = {
       [DEG.REVERSE]: [[0, 1], [0, 0], [1, 0], [1, -1]],
       [DEG.REVERSE_NIGHTY]: [[0, 0], [0, -1], [1, 0], [-1, -1]]
     },
-    center: [0, 0],
     name: "lighting-r"
+  }
+};
+
+export const BLOCK = {
+  ...PIECE,
+  [EMPTY]: {
+    name: "empty"
+  },
+  [SHADOW]: {
+    name: "shadow"
   }
 };
